@@ -7,10 +7,10 @@ fn main() {
 
     println!("Input -> key='{}' and value='{}'", key, value);
 
-    let data = format!("{}\t{}\n", key, value);
-    std::fs::write("kv.db", data).unwrap();
+    let mut db = database::Database::new().expect("database creation crashed!");
 
-    let _db = database::Database::new().expect("database creation crashed!");
+    db.insert(key.clone(), value.clone());
+    db.insert(key.to_uppercase(), value);
 
-    //println!("{}", db::map);
+    db.flush().unwrap();
 }
