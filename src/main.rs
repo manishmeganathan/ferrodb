@@ -10,7 +10,6 @@ fn main() {
     let mut db = database::Database::new().expect("database creation crashed!");
 
     db.insert(key.clone(), value.clone());
-    db.insert(key.to_uppercase(), value);
 
-    db.flush().unwrap();
+    //db.flush().unwrap();
 }

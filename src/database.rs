@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 pub struct Database {
     pub map: HashMap<String, String>,
+    flushed: bool,
 }
 
 impl Database {
@@ -22,7 +23,7 @@ impl Database {
         }
 
         // Return the constructed database
-        Ok(Database{map})
+        Ok(Database{map, flushed: false})
     }
 
     pub fn insert(&mut self, key: String, value: String) {
@@ -30,21 +31,39 @@ impl Database {
         self.map.insert(key, value);
     }
 
-    pub fn flush(self) -> std::io::Result<()> {
-        // Declare a new string for the full contents of the DB
-        let mut dbcontents = String::new();
-        // Declare a new string for the line by line iteration
-        let mut kvpair;
-
-        // Iterate over the contents of the db map
-        for (key, value) in self.map {
-            // Format the key value pair into a string
-            kvpair = format!("{}\t{}\n", key, value);
-            // Push the string into the db contents
-            dbcontents.push_str(&kvpair);
-        }
-
-        // Write the full db contents to file
-        return std::fs::write("kv.db", dbcontents);
+    pub fn flush(mut self) -> std::io::Result<()> {
+        // Set that the database has been flushed
+        self.flushed = true;
+        // Flush the database
+        dbflush(&self)
+        
     }
+}
+
+impl Drop for Database {
+    fn drop(&mut self) {
+        // Check if the database has been flushed
+        if !self.flushed {
+            // Flush the database
+            let _ = dbflush(self);
+        }   
+    }
+}
+
+fn dbflush(database: &Database) -> std::io::Result<()> {
+    // Declare a new string for the full contents of the DB
+    let mut dbcontents = String::new();
+    // Declare a new string for the line by line iteration
+    let mut kvpair;
+
+    // Iterate over the contents of the db map
+    for (key, value) in &database.map {
+        // Format the key value pair into a string
+        kvpair = format!("{}\t{}\n", key, value);
+        // Push the string into the db contents
+        dbcontents.push_str(&kvpair);
+    }
+
+    // Write the full db contents to file
+    return std::fs::write("kv.db", dbcontents);
 }
